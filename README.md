@@ -24,6 +24,12 @@ node src/main.js -p <project-key>
 
 ## Quick Start
 
+Download the pre-built binary for your platform from the [latest GitHub release](https://github.com/sonar-solutions/sonarqube-findings-enricher/releases/latest), then make it executable:
+
+```bash
+chmod +x sonarqube-enricher-*
+```
+
 1. Create a credentials file at `./sonarqube_credentials.json`:
 
 ```json
