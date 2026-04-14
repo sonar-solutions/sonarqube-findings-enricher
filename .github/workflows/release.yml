@@ -1,0 +1,184 @@
+# -------- Release Workflow — Build & Publish SEA Binaries --------
+# Triggers on push to main. Builds 6 binaries in parallel, then
+# creates a GitHub Release with all artifacts attached.
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+
+  # -------- Build Matrix — 6 Parallel Jobs --------
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target_os: darwin
+            target_arch: arm64
+            runner: macos-latest
+            binary: sonarqube-enricher-darwin-arm64
+          - target_os: darwin
+            target_arch: x64
+            runner: macos-latest
+            binary: sonarqube-enricher-darwin-x64
+          - target_os: linux
+            target_arch: arm64
+            runner: ubuntu-latest
+            binary: sonarqube-enricher-linux-arm64
+          - target_os: linux
+            target_arch: x64
+            runner: ubuntu-latest
+            binary: sonarqube-enricher-linux-x64
+          - target_os: win
+            target_arch: arm64
+            runner: ubuntu-latest
+            binary: sonarqube-enricher-win-arm64.exe
+          - target_os: win
+            target_arch: x64
+            runner: ubuntu-latest
+            binary: sonarqube-enricher-win-x64.exe
+
+    runs-on: ${{ matrix.runner }}
+    name: Build ${{ matrix.target_os }}-${{ matrix.target_arch }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Bundle source modules
+        run: node build/bundle.js
+
+      - name: Generate SEA blob
+        run: node --experimental-sea-config build/sea-config.json
+
+      - name: Download Node.js binary for target
+        run: |
+          chmod +x build/helpers/download-node.sh
+          NODE_FULL="$(node -v)"
+          bash build/helpers/download-node.sh \
+            "${{ matrix.target_os }}" \
+            "${{ matrix.target_arch }}" \
+            "${NODE_FULL}" \
+            dist
+
+      - name: Inject SEA blob into binary
+        run: |
+          chmod +x build/helpers/inject-sea.sh
+          bash build/helpers/inject-sea.sh \
+            "dist/${{ matrix.binary }}" \
+            "dist/sea-prep.blob" \
+            "${{ matrix.target_os }}"
+
+      - name: Save binary to cache
+        uses: actions/cache/save@v4
+        with:
+          path: dist/${{ matrix.binary }}
+          key: binary-${{ matrix.binary }}-${{ github.sha }}
+
+  # -------- Release — Collect Binaries & Publish --------
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Create Release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore darwin-arm64 binary
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/sonarqube-enricher-darwin-arm64
+          key: binary-sonarqube-enricher-darwin-arm64-${{ github.sha }}
+
+      - name: Restore darwin-x64 binary
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/sonarqube-enricher-darwin-x64
+          key: binary-sonarqube-enricher-darwin-x64-${{ github.sha }}
+
+      - name: Restore linux-arm64 binary
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/sonarqube-enricher-linux-arm64
+          key: binary-sonarqube-enricher-linux-arm64-${{ github.sha }}
+
+      - name: Restore linux-x64 binary
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/sonarqube-enricher-linux-x64
+          key: binary-sonarqube-enricher-linux-x64-${{ github.sha }}
+
+      - name: Restore win-arm64 binary
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/sonarqube-enricher-win-arm64.exe
+          key: binary-sonarqube-enricher-win-arm64.exe-${{ github.sha }}
+
+      - name: Restore win-x64 binary
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/sonarqube-enricher-win-x64.exe
+          key: binary-sonarqube-enricher-win-x64.exe-${{ github.sha }}
+
+      - name: Generate version tag
+        id: version
+        run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          TIMESTAMP="$(date -u +%Y%m%d-%H%M%S)"
+          TAG="v${TIMESTAMP}-${SHORT_SHA}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Generated tag: ${TAG}"
+
+      - name: Verify all binaries exist
+        run: |
+          echo "Checking binaries in dist/..."
+          ls -lh dist/
+          test -f dist/sonarqube-enricher-darwin-arm64
+          test -f dist/sonarqube-enricher-darwin-x64
+          test -f dist/sonarqube-enricher-linux-arm64
+          test -f dist/sonarqube-enricher-linux-x64
+          test -f dist/sonarqube-enricher-win-arm64.exe
+          test -f dist/sonarqube-enricher-win-x64.exe
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "SonarQube Enricher ${{ steps.version.outputs.tag }}" \
+            --notes "$(cat <<'EOF'
+          Automated release from main branch.
+
+          **Binaries included:**
+          | Platform | Architecture | File |
+          |----------|-------------|------|
+          | macOS | ARM64 (Apple Silicon) | `sonarqube-enricher-darwin-arm64` |
+          | macOS | x64 (Intel) | `sonarqube-enricher-darwin-x64` |
+          | Linux | ARM64 | `sonarqube-enricher-linux-arm64` |
+          | Linux | x64 | `sonarqube-enricher-linux-x64` |
+          | Windows | ARM64 | `sonarqube-enricher-win-arm64.exe` |
+          | Windows | x64 | `sonarqube-enricher-win-x64.exe` |
+
+          Download the binary for your platform, make it executable (`chmod +x`), and run it.
+          EOF
+          )" \
+            --latest \
+            dist/sonarqube-enricher-darwin-arm64 \
+            dist/sonarqube-enricher-darwin-x64 \
+            dist/sonarqube-enricher-linux-arm64 \
+            dist/sonarqube-enricher-linux-x64 \
+            dist/sonarqube-enricher-win-arm64.exe \
+            dist/sonarqube-enricher-win-x64.exe
