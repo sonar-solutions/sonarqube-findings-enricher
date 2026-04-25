@@ -1,6 +1,8 @@
 <!-- generated-by: gsd-doc-writer -->
 # SonarQube Findings Enricher
 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=sonar-solutions_sonarqube-findings-enricher)](https://sonarcloud.io/summary/new_code?id=sonar-solutions_sonarqube-findings-enricher) [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=sonar-solutions_sonarqube-findings-enricher)
+
 A CLI tool that exports all findings from a SonarQube Enterprise project and enriches each finding with its full issue changelog history, then outputs a structured JSON or formatted table report.
 
 ## Installation
