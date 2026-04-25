@@ -1,4 +1,7 @@
 <!-- generated-by: gsd-doc-writer -->
+
+**⚠️ Disclaimer: This is a purely experimental project, not affiliated with SonarSource or SonarQube in any way. Use at your own risk. Please fork and modify for your own needs, but do not use this in production or share it without clearly stating that it's not an official SonarQube product. I am not responsible for any issues that arise from using this tool.**
+
 # SonarQube Findings Enricher
 
 [![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=sonar-solutions_sonarqube-findings-enricher)](https://sonarcloud.io/summary/new_code?id=sonar-solutions_sonarqube-findings-enricher) [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=sonar-solutions_sonarqube-findings-enricher)
