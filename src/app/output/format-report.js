@@ -17,15 +17,19 @@ function formatAsTable(findings) {
   const separator = '-'.repeat(100);
   const lines = [];
 
-  lines.push(divider);
-  lines.push(`  SONARQUBE FINDINGS REPORT — ${findings.length} findings`);
-  lines.push(divider);
+  lines.push(
+    divider,
+    `  SONARQUBE FINDINGS REPORT — ${findings.length} findings`,
+    divider
+  );
 
   for (const finding of findings) {
-    lines.push('');
-    lines.push(formatFindingRow(finding));
-    lines.push(formatStatusTimeline(finding));
-    lines.push(separator);
+    lines.push(
+      '',
+      formatFindingRow(finding),
+      formatStatusTimeline(finding),
+      separator
+    );
   }
 
   return lines.join('\n');

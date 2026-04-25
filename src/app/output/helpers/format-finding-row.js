@@ -12,10 +12,13 @@ function formatFindingRow(f) {
     .map((i) => `${i.softwareQuality}/${i.severity}`)
     .join(', ') || 'N/A';
 
+  const status = f.issueStatus || f.status || 'N/A';
+  const resolution = f.resolution ? ' (' + f.resolution + ')' : '';
+
   const lines = [
     `  Key:          ${f.key}`,
     `  Rule:         ${f.ruleReference || 'N/A'}`,
-    `  Status:       ${f.issueStatus || f.status || 'N/A'}${f.resolution ? ` (${f.resolution})` : ''}`,
+    `  Status:       ${status}${resolution}`,
     `  Impacts:      ${impacts}`,
     `  Type:         ${f.type || 'ISSUE'}`,
     `  Message:      ${msg}`,

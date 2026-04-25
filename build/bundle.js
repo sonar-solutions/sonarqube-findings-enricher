@@ -1,8 +1,8 @@
 // -------- Module Bundler for Node.js SEA --------
 // Resolves local require() calls and inlines into a single file
 // Uses only Node.js stdlib — no third-party dependencies
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // -------- Configuration --------
 const ROOT = path.resolve(__dirname, '..');
@@ -90,10 +90,12 @@ function bundle() {
       patched = patched.split(dep.original).join(`__require("${depId}")`);
     }
 
-    lines.push(`__modules["${id}"] = function(module, exports, __require) {`);
-    lines.push(patched);
-    lines.push('};');
-    lines.push('');
+    lines.push(
+      `__modules["${id}"] = function(module, exports, __require) {`,
+      patched,
+      '};',
+      ''
+    );
   }
 
   // -- Execute entry point --

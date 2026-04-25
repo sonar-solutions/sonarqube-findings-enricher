@@ -1,6 +1,6 @@
 // -------- CLI Argument Parser --------
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // -- Flag name mapping --
 const FLAG_MAP = {

@@ -1,5 +1,5 @@
 // -------- App Setup & Orchestration --------
-const fs = require('fs');
+const fs = require('node:fs');
 const { parseArgs } = require('./cli/parse-args');
 const { validateArgs } = require('./cli/validate-args');
 const { printHelp } = require('./cli/print-help');
@@ -7,8 +7,15 @@ const { exportFindings } = require('./sonarqube/export-findings/handler');
 const { enrichFindings } = require('./sonarqube/enrich-findings/handler');
 const { formatReport } = require('./output/format-report');
 
+// -- Remove trailing slashes without regex --
+function trimTrailingSlashes(url) {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === '/') end--;
+  return url.slice(0, end);
+}
+
 // -- Main application runner --
-async function run() {
+async function execute() {
   const args = parseArgs(process.argv.slice(2));
 
   // -- Handle help flag --
@@ -20,7 +27,7 @@ async function run() {
   validateArgs(args);
 
   const config = {
-    serverUrl: args.serverUrl.replace(/\/+$/, ''),
+    serverUrl: trimTrailingSlashes(args.serverUrl),
     projectKey: args.projectKey,
     token: args.token,
     branch: args.branch || '',
@@ -53,6 +60,14 @@ async function run() {
   } else {
     console.log(report);
   }
+}
+
+// -- Entry wrapper with error handling --
+function run() {
+  execute().catch((error) => {
+    console.error(`\nError: ${error.message}`);
+    process.exit(1);
+  });
 }
 
 module.exports = { run };

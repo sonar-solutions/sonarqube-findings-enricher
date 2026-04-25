@@ -9,9 +9,6 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-
 jobs:
 
   # -------- Build Matrix — 6 Parallel Jobs --------
@@ -46,6 +43,8 @@ jobs:
             binary: sonarqube-enricher-win-x64.exe
 
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
     name: Build ${{ matrix.target_os }}-${{ matrix.target_arch }}
 
     steps:
@@ -91,6 +90,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     name: Create Release
 
     steps:

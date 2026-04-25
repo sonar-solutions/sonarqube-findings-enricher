@@ -62,7 +62,7 @@ There is no `package.json` and no npm scripts. All build operations are plain Ba
 
 The build process follows five steps (as printed during `build/build.sh`):
 
-1. **Bundle** — `node build/bundle.js` walks the module graph starting from `src/main.js`, inlines all local `require()` calls, and writes a single self-contained `dist/bundle.js`. Node.js built-in modules (`fs`, `http`, `https`, `path`) are not bundled — they remain live references.
+1. **Bundle** — `node build/bundle.js` walks the module graph starting from `src/main.js`, inlines all local `require()` calls, and writes a single self-contained `dist/bundle.js`. Node.js built-in modules (`node:fs`, `node:http`, `node:https`, `node:path`) are not bundled — they remain live references.
 
 2. **Generate SEA blob** — `node --experimental-sea-config build/sea-config.json` reads `dist/bundle.js` (as configured in `build/sea-config.json`) and writes the Node.js SEA preparation blob to `dist/sea-prep.blob`.
 
@@ -116,7 +116,7 @@ module.exports = { myFunction };
 
 - One exported function per file.
 - CommonJS `require` / `module.exports` — no ES module syntax (`import`/`export`).
-- No third-party dependencies. Only Node.js standard library modules (`fs`, `path`, `http`, `https`) and local `require()` calls.
+- No third-party dependencies. Only Node.js standard library modules (`node:fs`, `node:path`, `node:http`, `node:https`) and local `require()` calls.
 
 ### Error Handling
 

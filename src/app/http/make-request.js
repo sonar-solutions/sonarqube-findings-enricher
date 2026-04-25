@@ -1,6 +1,6 @@
 // -------- HTTP Request Module --------
-const https = require('https');
-const http = require('http');
+const https = require('node:https');
+const http = require('node:http');
 const { buildAuthHeader } = require('./helpers/build-auth-header');
 const { parseJsonResponse } = require('./helpers/parse-json-response');
 const { ApiError } = require('../errors/api-error');
